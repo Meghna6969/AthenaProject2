@@ -154,3 +154,43 @@ h1 {
     outline: none;
     border-color: #1177bb
 }
+
+.helper-text {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.helper-text.error{
+    color: #f44336;
+}
+
+.context-menu {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    min-width: 120px;
+    background-color: #2d2d30;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 5px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); 
+}
+
+.context-menu-item {
+    padding: 8px 12px;
+    color: #cccccc;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.context-menu-item:hover {
+    background-color: #0e639c;
+}
+.context-menu-item.delete {
+    color: #f44336;
+}
+.context-menu-item.delete:hover {
+    background-color: #c93c3c;
+    color: white;
+}

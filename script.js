@@ -3,9 +3,14 @@ document.addEventListener('DOMContentLoaded', function(){
     const newFileBtn = document.getElementById('newFileBtn');
     const fileList = document.querySelector('.file-list');
     const emptyMessage = document.querySelector('.empty-message');
+    const contextMenu = document.getElementById('contextMenu');
+    const renameFileBtn = document.getElementById('renameFileBtn');
+    const deleteFileBtn = document.getElementById('deleteFileBtn');
+
 
     let files = {};
     let currentFile = null;
+    let contextFile = null;
 
     const supportedExtensions = ['txt', 'html', 'css', 'js'];
 
@@ -45,6 +50,15 @@ document.addEventListener('DOMContentLoaded', function(){
             saveFiles();
         }
     }
+    function loadFiles() {
+        const savedFiles = localStorage.getItem('editorFiles');
+        if(savedFiles) {
+            files = JSON.parse(savedFiles);
+            fileList.innerHTML = '';
+            Object.keys(files).sort().forEach(createFileItem);
+            updateEmptyMessage();
+        }
+    }
 
     function switchToFile(filename){
         saveCurrentFile();
@@ -64,135 +78,177 @@ document.addEventListener('DOMContentLoaded', function(){
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
         fileItem.textContent = filename;
-
-        fileItem.addEventListener('click', function(){
-            if(this.classList.contains('editing')) return;
-            switchToFile(filename);
-        })
-
+        fileItem.dataset.filename = filename;
         fileList.appendChild(fileItem);
         return fileItem;
     }
+    function hideContextMenu() {
+        contextMenu.style.display = 'none';
+        contextFile = null;
+    }
+    function startFileEdit(fileItme, oldFilename) {
+        fileItem.classList.add('editing');
+        fileItem.innerHTML = '';
 
-    editor.addEventListener('keydown', function(e){
-        if(e.key === 'Tab'){
-            e.preventDefault();
-            const start = this.selectionStart;
-            const end = this.selectionEnd;
-            this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);
-            this.selectionStart = this.selectionEnd = start + 1;
-        }
-    });
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = oldFilename || 'newfile.txt';
+        const helperText = document.createElement('div');
+        helperText.className = 'helper-text';
+        helperText.textContent = 'Press Enter to save, Escape to cancel.'
+
+        fileItem.appendChild(input);
+        fileItem.appendChild(helperText);
+
+        input.focus();
+        input.select();
+
+        const finishEdit = (e) => {
+            input.removeEventListener('blur', finishEdit);
+            input.removeEventListener('keydown', handleKey);
+
+            const newFilename = input.value.trim();
+
+            if(!newFilename || (oldFilename && newFilename === oldFilename)){
+                cancelEdit();
+                return;
+            }
+            if(!newFilename.includes('.')){
+                helperText.textContent = 'Please include a file extension!.';
+                helperText.classList.add('error');
+                resetInputListeners();
+                return;
+            }
+            if(!isValidFileExtension(newFilename)){
+                helperText.textContent ='Unsupported file type!';
+                helperText.classList.add('error');
+                resetInputListeners();
+                return;
+            }
+            if(files.hasOwnProperty(newFilename)){
+                helperText.textContent = 'File already exists!';
+                helperText.classList.add('error');
+                resetInputListeners();
+                return;
+            }
+
+            if(oldFilename) {
+                files[newFilename] = files[oldFilename];
+                delete files[oldFilename];
+                if(currentFile === oldFilename){
+                    currentFile = newFilename;
+                }
+            } else {
+                files[newFilename] = '';
+            }
+            saveFiles();
+
+            fileItem.classList.remove('editing');
+            fileItem.textContent = newFilename;
+            fileItem.dataset.filename = newFilename;
+
+            if(!oldFilename){
+                switchToFile(newFilename);
+            } else if (currentFile === newFilename){
+                fileItem.classList.add('active');
+            }
+            updateEmptyMessage();
+        };
+        const cancelEdit = () => {
+            if(oldFilename){
+                fileItem.classList.remove('editing');
+                fileItem.textContent = oldFilename;
+            } else {
+                fileItem.remove();
+            }
+            updateEmptyMessage();
+        };
+
+        const handleKey = (e) => {
+            if(e.key === 'Enter'){
+                e.preventDefault();
+                finishEdit();
+            } else if (e.key === 'Escape'){
+                e.preventDefault();
+                cancelEdit();
+            }
+        };
+
+        const resetInputListeners = () => {
+            input.addEventListener('blur', finishEdit);
+            input.addEventListener('keydown', handleKey);
+        };
+
+        resetInputListeners();
+    }
+
 
     editor.addEventListener('input', function(){
         saveCurrentFile();
     });
 
-    const savedContent = localStorage.getItem('editorContent');
-    if(savedContent){
-        editor.value = savedContent;
-    }
+    newFileBtn.addEventListener('click', () => {
+        const tempFileItem = document.createElement('div');
+        fileList.appendChild(tempFileItem);
+        startFileEdit(tempFileItem, null);
+        updateEmptyMessage();
+    });
 
-    newFileBtn.addEventListener('click', function() {
-        const newFileItem = document.createElement('div');
-        newFileItem.className = 'file-item editing';
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = '';
-        input.value = 'newfile.txt';
-
-        const helperText = document.createElement('div');
-        helperText.className = 'helper-text';
-        helperText.textContent = 'Supported: .html, .css, .js, .txt';
-        
-        newFileItem.appendChild(input);
-        newFileItem.appendChild(helperText);
-        fileList.appendChild(newFileItem);
-
-        input.focus();
-        input.select();
-
-        let isCompleting = false;
-
-        function completeEdit() {
-            if(isCompleting) return;
-            isCompleting = true;
-
-            
-            const filename = input.value.trim();
-
-            if(!filename){
-                newFileItem.remove();
-                updateEmptyMessage();
-                return;
-            }
-            if(!filename.includes('.')) {
-                alert('Please include a file extension');
-                isCompleting = false;
-                input.focus();
-                input.select();
-                return;
-            }
-            if(!isValidFileExtension(filename)){
-                alert('Unsupported file type! Choose from .html, .css, .js, .txt');
-                isCompleting = false;
-                input.focus();
-                input.select();
-                return;
-            }
-
-            if(files.hasOwnProperty(filename)){
-                alert('File already exists!');
-                isCompleting = false;
-                input.focus();
-                input.select();
-                return;
-            }
-
-                files[filename] = '';
-                saveFiles();
-
-                newFileItem.classList.remove('editing');
-                newFileItem.innerHTML = '';
-                newFileItem.textContent = filename;
-
-                newFileItem.addEventListener('click', function(){
-                    switchToFile(filename);
-                });
-                switchToFile(filename);
-                updateEmptyMessage();
+    fileList.addEventListener('click', (e) => {
+        const fileItem = e.target.closest('.file-item');
+        if(fileItem && !fileItem.classList.contains('editing')){
+            switchToFile(fileItem.dataset.filename);
         }
+    });
+    fileList.addEvenetListener('contextmenu', (e) => {
+        const fileItem = e.target.closest('.file-item');
+        if(fileItem && !fileItme.classList.constains('editing')){
+            e.preventDefault();
+            contextFile = fileItem.dataset.filename;
+            contextMenu.style.top = `${e.clientY}px`;
+            contextMenu.style.left = `${e.clientX}px`;
+            contextMenu.style.display = 'block';
+        } else {
+            hideContextMenu();
+        }
+    });
 
-        function cancelEdit(){
-            if(isCompleting) return;
-            newFileItem.remove();
+    renameFileBtn.addEventListener('click', () => {
+        if(contextFile){
+            const fileItem = Array.from(fileList.children).find(item => item.dataset.filename === contextFile);
+            if(fileItem){
+                startFileEdit(fileItem, contextFile);
+            }
+        }
+        hideContextMenu();
+    });
+    deleteFileBtn.addEventListener('click', () => {
+        if(contextFile && confirm(`Are you sure you want to delete "${contextFile}?`)){
+            const fileItem = Array.from(fileList.children).find(item => item.dataset.filename === contextFile);
+            if(fileItem) fileItem.remove();
+
+            delete files[contextFile];
+            saveFiles();
+
+            if(currentFile === contextFile){
+                currentFile = null;
+                editor.value = '';
+                const remainingFiles = Object.keys(files);
+                if(remainingFiles.length > 0){
+                    switchToFile(remainingFiles[0]);
+                }
+            }
             updateEmptyMessage();
         }
-        function handleKeydown(e){
-            if(e.key === 'Enter'){
-                e.preventDefault();
-                e.stopPropagation();
-                completeEdit();
-            } else if (e.key === 'Escape'){
-                e.preventDefault();
-                e.stopPropagation();
-                cancelEdit();
-            }
-        }
-
-        function handleBlur(){
-            setTimeout(() => {
-                if(!isCompleting){
-                    completeEdit();
-                }
-            }, 100);
-        }
-        input.addEventListener('keydown', handleKeydown);
-        
-        input.addEventListener('blur', handleBlur);
+        hideContextMenu();
     });
-    loadFiles();
+    document.addEvenetListener('click', (e) => {
+        if(!contextMenu.containes(e.target)){
+            hideContextMenu();
+        }
+    });
 
+    loadFiles();
     updateEmptyMessage();
+    
 });
