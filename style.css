@@ -124,3 +124,33 @@ h1 {
 #codeEditor:focus {
     background-color: #1e1e1e;
 }
+.empty-message {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 10px;
+    font-size: 13px;
+}
+.file-item.active {
+    background-color: #0e639c;
+    color: white;
+}
+
+.file-item.editing {
+    padding: 4px 8px;
+}
+
+.file-item input {
+    background: transparent;
+    border: 1px solid #0e639c;
+    color: white;
+    padding: 4px;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 2px;
+    font-family: 'Courier New', Courier, monospace;
+}
+.file-item input:focus {
+    outline: none;
+    border-color: #1177bb
+}
