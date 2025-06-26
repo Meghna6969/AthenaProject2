@@ -1,0 +1,126 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.main-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+.left-panel {
+    width: 250px;
+    background-color: #252526;
+    border-right: 1px solid #333;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.left-panel h3 {
+    color: #cccccc;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.new-file-btn {
+    background-color: purple;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.new-file-btn:hover {
+    background-color: purple;
+}
+
+.file-item {
+    padding: 8px 12px;
+    background-color: #2d2d30;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
+}
+
+.file-item:hover {
+    background-color: #37373d;
+}
+
+.editor-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+h1 {
+    text-align: center;
+    padding: 15px;
+    background-color: #2d2d2d;
+    color: #61dafb;
+    border-bottom: 1px solid #333;
+    margin: 0;
+}
+
+.editor-container {
+    flex: 1;
+    display: flex;
+}
+
+#codeEditor {
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: none;
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+}
+
+#codeEditor::placeholder {
+    color: #888;
+}
+
+#codeEditor:focus {
+    background-color: #1e1e1e;
+}
