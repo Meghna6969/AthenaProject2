@@ -84,7 +84,7 @@ body {
 
 .editor-section {
     flex: 1;
-    display: flex;
+    display: none;
     flex-direction: column;
     overflow: hidden;
     height: 100vh;
@@ -110,6 +110,34 @@ h1 {
     height: 100%;
     font-family: 'Courier New', Courier, monospace;
     font-size: 14px;
+}
+.CodeMirror-hints {
+    position: absolute;
+    z-index: 10;
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    box-shadow: 2px 3px 5px rgba(0,0,0,0.2);
+    border-radius: 3px;
+    border: 1px solid #333;
+    background: #282a36;
+    font-size: 90%;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.CodeMirror-hint {
+    margin: 0;
+    padding:2px 4px;
+    border-radius: 2px;
+    white-space: pre;
+    color: #f8f8f2;
+    cursor: pointer;
+}
+
+li.CodeMirror-hint-active {
+    background: #44475a;
+    color: #f8f8f2;
 }
 
 #codeEditor {
@@ -224,4 +252,14 @@ h1 {
 }
 .file-item:hover {
     background-color: #37373d;
+}
+
+.editor-placeholder {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #888;
+    padding: 20px;
 }

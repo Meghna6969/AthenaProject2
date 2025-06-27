@@ -2,7 +2,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
         lineNumbers: true,
         theme: 'dracula',
-        mode: 'text/plain'
+        mode: 'text/plain',
+        extraKeys: {"Ctrl-Space": "autocomplete"},
+        hintOptions: {
+            completeSingle: false
+        }
+    });
+
+    editor.on('inputRead', function(cm, change){
+        if(change.origin === "+input" && change.text[0].trim().length > 0){
+            cm.showHint({completeSingle: false});
+        }
     });
     const newFileBtn = document.getElementById('newFileBtn');
     const fileList = document.querySelector('.file-list');
@@ -10,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const contextMenu = document.getElementById('contextMenu');
     const renameFileBtn = document.getElementById('renameFileBtn');
     const deleteFileBtn = document.getElementById('deleteFileBtn');
-
+    const editorSection = document.querySelector('.editor-section');
+    const editorPlaceholder = document.getElementById('editor-placeholder');
     
 
     let files = {};
@@ -41,9 +52,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateEmptyMessage() {
         const fileItems = document.querySelectorAll('.file-item:not(.editing)');
         emptyMessage.style.display = fileItems.length === 0 ? 'block' : 'none';
-        editor.getWrapperElement().style.display = fileItems.length === 0 ? 'none' : 'block'
     }
-
+    function updateEditorView(){
+        if(currentFile){
+            editorPlaceholder.style.display = 'none';
+            editorSection.style.display = 'flex';
+            editor.refresh();
+        } else {
+            editorPlaceholder.style.display = 'flex';
+            editorSection.style.display = 'none';
+        }
+    }
     function saveFiles() {
         localStorage.setItem('editorFiles', JSON.stringify(files));
     }
@@ -76,6 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.file-item').forEach(item => {
             item.classList.toggle('active', item.dataset.filename === filename);
         });
+
+        updateEditorView();
     }
 
     function getFileIcon(filename) {
@@ -213,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetInputListeners();
     }
 
-    editor.addEventListener('input', saveCurrentFile);
+    editor.on('change', saveCurrentFile);
 
     newFileBtn.addEventListener('click', () => {
         const tempFileItem = document.createElement('div');
@@ -266,11 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (currentFile === contextFile) {
                     currentFile = null;
-                    editor.value = '';
-                    const remainingFiles = Object.keys(files);
-                    if (remainingFiles.length > 0) {
-                        switchToFile(remainingFiles[0]);
-                    }
+                    updateEditorView();
                 }
                 updateEmptyMessage();
             }
@@ -286,4 +303,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadFiles();
     updateEmptyMessage();
+    updateEditorView();
 });

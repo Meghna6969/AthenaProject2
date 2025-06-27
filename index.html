@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css">
     </head>
     <body>
         <div class="main-container">
@@ -16,10 +17,15 @@
                     <div class="empty-message">Click the + button to add documents</div>
                 </div>
             </div>
+            <div id="editor-placeholder" class="editor-placeholder">
+                <h2>Add or Select a file from the left panel to edit code here!</h2>
+            </div>
             <div class="editor-section">
                 <h1>Code below</h1>
+                
                 <div class="editor-container">
-                    <textarea id="codeEditor" placeholder="Start typing your code here..."></textarea>
+                    
+                    <textarea id="codeEditor"></textarea>
                 </div>
             </div>
         </div>
@@ -28,12 +34,20 @@
             <div id="deleteFileBtn" class="context-menu-item">Delete</div>
         </div>
         <!-- CodeMirror JS -->
+        <!-- CodeMirror JS -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
         <!-- CodeMirror Modes for different languages -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+        <!-- CodeMirror Hint Addon JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/anyword-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/xml-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/html-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/css-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/javascript-hint.min.js"></script>
         <script src="script.js"></script>
     </body>
 </html>
