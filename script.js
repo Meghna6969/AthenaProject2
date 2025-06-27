@@ -22,11 +22,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteFileBtn = document.getElementById('deleteFileBtn');
     const editorSection = document.querySelector('.editor-section');
     const editorPlaceholder = document.getElementById('editor-placeholder');
+    const tabsContainer = document.getElementById('tabsContainer');
+    const tabsContainer2 = document.querySelector('tabsContainer');
     
 
     let files = {};
     let currentFile = null;
     let contextFile = null;
+    let openFiles = [];
 
     const supportedExtensions = ['txt', 'html', 'css', 'js'];
 
@@ -65,6 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function saveFiles() {
         localStorage.setItem('editorFiles', JSON.stringify(files));
+        localStorage.setItem('openFiles', JSON.stringify(openFiles));
+        localStorage.setItem('currentFile', currentFile);
     }
 
     function saveCurrentFile() {
@@ -82,12 +87,32 @@ document.addEventListener('DOMContentLoaded', function() {
             Object.keys(files).sort().forEach(createFileItem);
             updateEmptyMessage();
         }
+
+        const savedOpenFiles = localStorage.getItem('openFiles');
+        if(savedOpenFiles){
+            openFiles = JSON.parse(savedOpenFiles);
+            openFiles.forEach(filename => {
+                if(files[filename] !== undefined) createTab(filename);
+            });
+        }
+
+        const savedCurrentFile = localStorage.getItem('currentFile');
+        if(savedCurrentFile && files[savedCurrentFile] !== undefined){
+            switchToFile(savedCurrentFile);
+        } else {
+            updateEditorView();
+        }
     }
 
     function switchToFile(filename) {
-        if (currentFile === filename) return;
-        saveCurrentFile();
+        if(!files.hasOwnProperty(filename)) return;
 
+        if(!openFiles.includes(filename)){
+            openFiles.push(filename);
+            createTab(filename);
+        }
+
+        saveCurrentFile();
         currentFile = filename;
         editor.setValue(files[filename] || '');
         editor.setOption('mode', getModeForFilename(filename));
@@ -95,8 +120,47 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.file-item').forEach(item => {
             item.classList.toggle('active', item.dataset.filename === filename);
         });
+        document.querySelectorAll('.tab-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.filename === filename);
+        });
 
         updateEditorView();
+        saveFiles();
+    }
+
+    function createTab(filename){
+        const tab = document.createElement('div');
+        tab.className = 'tab-item';
+        tab.dataset.filename = filename;
+
+        const tabName = document.createElement('span');
+        tabName.textContent = filename;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'tab-close-btn';
+        closeBtn.innerHTML = '&times;';
+
+        tab.appendChild(tabName);
+        tab.appendChild(closeBtn);
+        tabsContainer.appendChild(tab);
+    }
+
+    function closeTab(filename) {
+        openFiles = openFiles.filter(f => f !== filename);
+
+        const tabToRemove = tabsContainer.querySelector(`.tab-item[data-filename="${filename}"]`);
+        if(tabToRemove) tabToRemove.remove();
+
+        if(currentFile === filename){
+            if(openFiles.length > 0){
+                switchToFile(openFiles[openFiles.length - 1]);
+            } else {
+                currentFile = null;
+                editor.setValue('');
+                updateEditorView();
+            }
+        }
+        saveFiles();
     }
 
     function getFileIcon(filename) {
@@ -186,9 +250,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (oldFilename) {
                 files[newFilename] = files[oldFilename];
                 delete files[oldFilename];
-                if (currentFile === oldFilename) {
-                    currentFile = newFilename;
+                
+                if(openFiles.includes(oldFilename)){
+                    openFiles = openFiles.map(f => f === oldFilename ? newFilename : f);
+                    const tab = tabsContainer.querySelector(`.tab-item[data-filename="${oldFilename}"]`);
+                    if(tab){
+                        tab.dataset.filename = newFilename;
+                        tab.querySelector('span').textContent = newFilename;
+                    }
                 }
+                if(currentFile === oldFilename) currentFile = newFilename;
+
             } else {
                 files[newFilename] = '';
             }
@@ -251,6 +323,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    tabsContainer.addEventListener('click', (e) => {
+        const target = e.target;
+
+        if(target.classList.contains('tab-close-btn')) {
+
+            e.stopPropagation();
+            const filename = target.parentElement.dataset.filename;
+            closeTab(filename);
+        } else {
+            const tabItem = target.closest('.tab-item');
+            if(tabItem) {
+                switchToFile(tabItem.dataset.filename);
+            }
+        }
+    })
+
     fileList.addEventListener('contextmenu', (e) => {
         const fileItem = e.target.closest('.file-item');
         if (contextMenu && fileItem && !fileItem.classList.contains('editing')) {
@@ -280,16 +368,16 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteFileBtn.addEventListener('click', () => {
             if (contextFile && confirm(`Are you sure you want to delete "${contextFile}"?`)) {
                 const fileItem = Array.from(fileList.children).find(item => item.dataset.filename === contextFile);
-                if (fileItem) fileItem.remove();
-
-                delete files[contextFile];
-                saveFiles();
-
-                if (currentFile === contextFile) {
-                    currentFile = null;
-                    updateEditorView();
+                if(fileItem) {
+                    fileItem.remove();
                 }
+                if(openFiles.includes(contextFile)){
+                    closeTab(contextFile);
+                }
+                delete files[contextFile];
+
                 updateEmptyMessage();
+                saveFiles();
             }
             hideContextMenu();
         });

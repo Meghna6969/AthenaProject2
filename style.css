@@ -263,3 +263,40 @@ li.CodeMirror-hint-active {
     color: #888;
     padding: 20px;
 }
+.tabs-container {
+    display: flex;
+    background-color: #252526;
+    padding: 5px 5px 0 5px;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.tab-item{
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #2d2d30;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #ccc;
+    white-space: nowrap;
+}
+.tab-item.active{
+    background-color: #1e1e1e;
+    color: white;
+}
+.tab-close-btn {
+    margin-left: 10px;
+    padding: 0 4px;
+    border: none;
+    background: transparent;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 50%;
+}
+.tab-close-btn:hover {
+    background-color: #555;
+}
