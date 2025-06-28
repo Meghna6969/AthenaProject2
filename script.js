@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         1: document.getElementById('editorPane1'),
         2: document.getElementById('editorPane2')
     };
+    const resizer = document.getElementById('resizer');
 
     let files = {};
     let contextFile = null;
@@ -75,15 +76,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateEditorView() {
-        const hasOpenFile = Object.values(openFiles).some(arr => arr.length > 0);
+        const hasOpenFile = Object.values(openFiles).some(arr => arr && arr.length > 0);
         if (hasOpenFile) {
             editorPlaceholder.style.display = 'none';
             editorSection.style.display = 'flex';
-            Object.values(editors).forEach(e => e.refresh());
         } else {
             editorPlaceholder.style.display = 'flex';
             editorSection.style.display = 'none';
         }
+        updatePaneLayout();
     }
 
     function saveFiles() {
@@ -98,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveFiles();
         }
     }
-
+    
     function loadFiles() {
         const savedFiles = localStorage.getItem('editorFiles');
         if (savedFiles) {
@@ -109,14 +110,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const savedOpenFiles = localStorage.getItem('openFiles');
         if (savedOpenFiles) {
-            openFiles = JSON.parse(savedOpenFiles);
-            if (!openFiles[1]) openFiles[1] = [];
-            if (!openFiles[2]) openFiles[2] = [];
+            const loadedOpen = JSON.parse(savedOpenFiles);
+            openFiles = {
+                1: loadedOpen[1] || [],
+                2: loadedOpen[2] || []
+            };
         }
 
         const savedCurrentFiles = localStorage.getItem('currentFiles');
         if (savedCurrentFiles) {
-            currentFiles = JSON.parse(savedCurrentFiles);
+            const loadedCurrent = JSON.parse(savedCurrentFiles);
+            currentFiles = {
+                1: loadedCurrent[1] || null,
+                2: loadedCurrent[2] || null
+            };
         }
 
         [1, 2].forEach(paneId => {
@@ -127,11 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 switchToFile(currentFiles[paneId], paneId);
             }
         });
-
-        if (openFiles[2].length > 0) {
-            editorPanes[2].style.display = 'flex';
-            resizer.style.display = 'block';
-        }
 
         updateEmptyMessage();
         updateEditorView();
@@ -206,14 +208,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (paneId === 2) {
                     editorPanes[2].style.display = 'none';
                     resizer.style.display = 'none';
-                    editorPanes[1].style.width = '100%';
                 }
             }
         }
 
-        if (!openFiles[1].length && !openFiles[2].length) {
-            updateEditorView();
-        }
+        updateEditorView();
         saveFiles();
     }
 
@@ -251,6 +250,23 @@ document.addEventListener('DOMContentLoaded', function() {
             contextMenu.style.display = 'none';
         }
         contextFile = null;
+    }
+
+    function updatePaneLayout() {
+        const isSplit = openFiles[2].length > 0;
+        if (isSplit) {
+            resizer.style.display = 'block';
+            editorPanes[2].style.display = 'flex';
+            if (!editorPanes[1].style.width || editorPanes[1].style.width === '100%') {
+                editorPanes[1].style.width = '50%';
+                editorPanes[2].style.width = '50%';
+            }
+        } else {
+            resizer.style.display = 'none';
+            editorPanes[2].style.display = 'none';
+            editorPanes[1].style.width = '100%';
+        }
+        Object.values(editors).forEach(e => e.refresh());
     }
 
     function startFileEdit(fileItem, oldFilename) {
@@ -366,12 +382,10 @@ document.addEventListener('DOMContentLoaded', function() {
         resetInputListeners();
     }
 
-    function initResizer(){
+    function initResizer() {
         let isResizing = false;
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
 
-        document.addEventListener('mousedown', (e) => {
+        resizer.addEventListener('mousedown', (e) => {
             isResizing = true;
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
@@ -380,8 +394,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('mouseup', stopResize);
         });
 
-        function handleMouseMove(e){
-            if(!isResizing) return;
+        function handleMouseMove(e) {
+            if (!isResizing) return;
 
             const container = editorSection.querySelector('.editor-group');
             const containerRect = container.getBoundingClientRect();
@@ -391,15 +405,16 @@ document.addEventListener('DOMContentLoaded', function() {
             let pane1Width = e.clientX - containerRect.left;
             let pane2Width = containerRect.right - e.clientX;
 
-            if(pane1Width < pane1MinWidth){
+            if (pane1Width < pane1MinWidth) {
                 pane1Width = pane1MinWidth;
                 pane2Width = containerRect.width - pane1Width - resizer.offsetWidth;
             }
 
-            if(pane2Width < pane2MinWidth){
+            if (pane2Width < pane2MinWidth) {
                 pane2Width = pane2MinWidth;
-                panel1Width = containerRect.width - pane2Width - resizer.offsetWidth;
+                pane1Width = containerRect.width - pane2Width - resizer.offsetWidth;
             }
+
             editorPanes[1].style.width = `${pane1Width}px`;
             editorPanes[2].style.width = `${pane2Width}px`;
 
@@ -407,12 +422,12 @@ document.addEventListener('DOMContentLoaded', function() {
             editors[2].refresh();
         }
 
-        function stopResize(){
+        function stopResize() {
             isResizing = false;
             document.body.style.cursor = 'default';
             document.body.style.userSelect = 'auto';
             document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEvenetListener('mouseup', stopResize);
+            document.removeEventListener('mouseup', stopResize);
         }
     }
 
@@ -484,12 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (splitViewBtn) {
         splitViewBtn.addEventListener('click', () => {
             if (contextFile) {
-                editorPanes[2].style.display = 'flex';
-                resizer.style.display = 'block';
-                editorPanes[1].style.width = '50%';
-                editorPanes[2].style.width = '50%';
                 switchToFile(contextFile, 2);
-                Object.values(editors).forEach(e => e.refresh());
             }
             hideContextMenu();
         });
@@ -523,5 +533,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    initResizer();
     loadFiles();
 });
