@@ -22,16 +22,25 @@
             </div>
             <div class="editor-section">
                 <h1>Code below</h1>
-                <div id="tabsContainer" class="tabs-container"></div>
-                
-                <div class="editor-container">
-                    
-                    <textarea id="codeEditor"></textarea>
+                <div class="editor-group">
+                    <div class="editor-pane" id="editorPane1">
+                        <div id="tabsContainer1" class="tabs-container"></div>
+                        <div class="editor-container">
+                            <textarea id="codeEditor1"></textarea>
+                        </div>
+                    </div>
+                    <div class="editor-pane" id="editorPane2" style="display:none;">
+                        <div id="tabsContainer2" class="tabs-container"></div>
+                        <div class="editor-container">
+                            <textarea id="codeEditor2"></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div id="contextMenu" class="context-menu">
             <div id="renameFileBtn" class="context-menu-item">Rename</div>
+             <div id="splitViewBtn" class="context-menu-item">Open in Split View</div>
             <div id="deleteFileBtn" class="context-menu-item">Delete</div>
         </div>
         <!-- CodeMirror JS -->
