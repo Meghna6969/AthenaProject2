@@ -1,33 +1,29 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const editors = {1: CodeMirror.fromTextArea(document.getElementById('codeEditor1'), {
-        lineNumbers: true,
-        theme: 'dracula',
-        mode: 'text/plain',
-        extraKeys: {"Ctrl-Space": "autocomplete"},
-        hintOptions: { completeSingle: false}
-    }),
-    2: CodeMirror.fromTextArea(document.getElementById('codeEditor2'), {
-        lineNumbers: true,
-        theme: 'dracula',
-        mode: 'text/plain',
-        extraKeys: {"Ctrl-Space": "autocomplete"},
-        hintOptions: { completeSingle: false}
-    })
-};
+    const editors = {
+        1: CodeMirror.fromTextArea(document.getElementById('codeEditor1'), {
+            lineNumbers: true,
+            theme: 'dracula',
+            mode: 'text/plain',
+            extraKeys: {"Ctrl-Space": "autocomplete"},
+            hintOptions: { completeSingle: false }
+        }),
+        2: CodeMirror.fromTextArea(document.getElementById('codeEditor2'), {
+            lineNumbers: true,
+            theme: 'dracula',
+            mode: 'text/plain',
+            extraKeys: {"Ctrl-Space": "autocomplete"},
+            hintOptions: { completeSingle: false }
+        })
+    };
 
-Object.values(editors).forEach(editor => {
-    editor.on('inputRead', function(cm, change){
-        if(change.origin === "+input" && change.text[0].trim().length > 0){
-            cm.showHint({completeSingle: false});
-        }
+    Object.values(editors).forEach(editor => {
+        editor.on('inputRead', function(cm, change) {
+            if (change.origin === "+input" && change.text[0].trim().length > 0) {
+                cm.showHint({ completeSingle: false });
+            }
+        });
     });
-});
 
-    editor.on('inputRead', function(cm, change){
-        if(change.origin === "+input" && change.text[0].trim().length > 0){
-            cm.showHint({completeSingle: false});
-        }
-    });
     const newFileBtn = document.getElementById('newFileBtn');
     const fileList = document.querySelector('.file-list');
     const emptyMessage = document.querySelector('.empty-message');
@@ -37,16 +33,19 @@ Object.values(editors).forEach(editor => {
     const splitViewBtn = document.getElementById('splitViewBtn');
     const editorSection = document.querySelector('.editor-section');
     const editorPlaceholder = document.getElementById('editor-placeholder');
-    const tabsContainer = document.getElementById('tabsContainer');
+    const tabsContainers = {
+        1: document.getElementById('tabsContainer1'),
+        2: document.getElementById('tabsContainer2')
+    };
     const editorPanes = {
         1: document.getElementById('editorPane1'),
         2: document.getElementById('editorPane2')
     };
-    
+
     let files = {};
-    let currentFile = {1: null, 2: null};
     let contextFile = null;
-    let openFiles = {1: [], 2: []};
+    let openFiles = { 1: [], 2: [] };
+    let currentFiles = { 1: null, 2: null };
     let activePane = 1;
 
     const supportedExtensions = ['txt', 'html', 'css', 'js'];
@@ -56,9 +55,9 @@ Object.values(editors).forEach(editor => {
         return supportedExtensions.includes(extension);
     }
 
-    function getModeForFilename(filename){
+    function getModeForFilename(filename) {
         const extension = filename.split('.').pop().toLowerCase();
-        switch(extension){
+        switch (extension) {
             case 'html':
                 return 'htmlmixed';
             case 'css':
@@ -74,9 +73,10 @@ Object.values(editors).forEach(editor => {
         const fileItems = document.querySelectorAll('.file-item:not(.editing)');
         emptyMessage.style.display = fileItems.length === 0 ? 'block' : 'none';
     }
-    function updateEditorView(){
-        const hasOpenFile = Object.values(currentFile).some(arr => arr.length > 0);
-        if(hasOpenFile) {
+
+    function updateEditorView() {
+        const hasOpenFile = Object.values(openFiles).some(arr => arr.length > 0);
+        if (hasOpenFile) {
             editorPlaceholder.style.display = 'none';
             editorSection.style.display = 'flex';
             Object.values(editors).forEach(e => e.refresh());
@@ -85,13 +85,15 @@ Object.values(editors).forEach(editor => {
             editorSection.style.display = 'none';
         }
     }
-    function saveFiles(){
+
+    function saveFiles() {
         localStorage.setItem('editorFiles', JSON.stringify(files));
         localStorage.setItem('openFiles', JSON.stringify(openFiles));
-        localStorage.setItem('currentFile', JSON.stringify(currentFiles));
+        localStorage.setItem('currentFiles', JSON.stringify(currentFiles));
     }
+
     function saveCurrentFile(paneId) {
-        if(currentFiles[paneId]) {
+        if (currentFiles[paneId]) {
             files[currentFiles[paneId]] = editors[paneId].getValue();
             saveFiles();
         }
@@ -99,51 +101,53 @@ Object.values(editors).forEach(editor => {
 
     function loadFiles() {
         const savedFiles = localStorage.getItem('editorFiles');
-        if(savedFiles) {
+        if (savedFiles) {
             files = JSON.parse(savedFiles);
             fileList.innerHTML = '';
             Object.keys(files).sort().forEach(createFileItem);
         }
 
         const savedOpenFiles = localStorage.getItem('openFiles');
-        if(savedOpenFiles){
+        if (savedOpenFiles) {
             openFiles = JSON.parse(savedOpenFiles);
-            if(!openFiles[1]) openFiles[1] = [];
-            if(!openFiles[2]) openFiles[2] = [];
+            if (!openFiles[1]) openFiles[1] = [];
+            if (!openFiles[2]) openFiles[2] = [];
         }
 
         const savedCurrentFiles = localStorage.getItem('currentFiles');
-        if(savedCurrentFiles){
+        if (savedCurrentFiles) {
             currentFiles = JSON.parse(savedCurrentFiles);
         }
+
         [1, 2].forEach(paneId => {
             openFiles[paneId].forEach(filename => {
-                if(files[filename] !== undefined) createTab(filename, paneId);
+                if (files[filename] !== undefined) createTab(filename, paneId);
             });
-            if(currentFiles[paneId] && files[currentFiles[paneId]] !== undefined){
+            if (currentFiles[paneId] && files[currentFiles[paneId]] !== undefined) {
                 switchToFile(currentFiles[paneId], paneId);
             }
         });
 
-        if(openFiles[2].length > 0){
+        if (openFiles[2].length > 0) {
             editorPanes[2].style.display = 'flex';
-
-            updateEmptyMessage();
-            updateEditorView();
+            resizer.style.display = 'block';
         }
+
+        updateEmptyMessage();
+        updateEditorView();
     }
 
-    function switchToFile(filename) {
-        if(!files.hasOwnProperty(filename)) return;
+    function switchToFile(filename, paneId, focusPane = true) {
+        if (!files.hasOwnProperty(filename)) return;
 
-        if(focusPane) activePane = paneId;
+        if (focusPane) activePane = paneId;
 
         const otherPaneId = paneId === 1 ? 2 : 1;
-        if(openFiles[otherPaneId].includes(filename)) {
+        if (openFiles[otherPaneId].includes(filename)) {
             closeTab(filename, otherPaneId);
         }
 
-        if(!openFiles[paneId].includes(filename)){
+        if (!openFiles[paneId].includes(filename)) {
             openFiles[paneId].push(filename);
             createTab(filename, paneId);
         }
@@ -161,7 +165,7 @@ Object.values(editors).forEach(editor => {
         });
 
         [1, 2].forEach(pId => {
-            tabsContainer[pId].querySelectorAll('.tab-item').forEach(item => {
+            tabsContainers[pId].querySelectorAll('.tab-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.filename === currentFiles[pId]);
             });
         });
@@ -170,7 +174,7 @@ Object.values(editors).forEach(editor => {
         saveFiles();
     }
 
-    function createTab(filename, paneId){
+    function createTab(filename, paneId) {
         const tab = document.createElement('div');
         tab.className = 'tab-item';
         tab.dataset.filename = filename;
@@ -184,28 +188,30 @@ Object.values(editors).forEach(editor => {
 
         tab.appendChild(tabName);
         tab.appendChild(closeBtn);
-        tabsContainer[paneId].appendChild(tab);
+        tabsContainers[paneId].appendChild(tab);
     }
 
-    function closeTab(filename) {
-        openFiles = openFiles.filter(f => f !== filename);
+    function closeTab(filename, paneId) {
+        openFiles[paneId] = openFiles[paneId].filter(f => f !== filename);
 
-        const tabToRemove = tabsContainer.querySelector(`.tab-item[data-filename="${filename}"]`);
-        if(tabToRemove) tabToRemove.remove();
+        const tabToRemove = tabsContainers[paneId].querySelector(`.tab-item[data-filename="${filename}"]`);
+        if (tabToRemove) tabToRemove.remove();
 
-        if(currentFiles[paneId] === filename){
-            if(openFiles[paneId].length > 0){
+        if (currentFiles[paneId] === filename) {
+            if (openFiles[paneId].length > 0) {
                 switchToFile(openFiles[paneId][openFiles[paneId].length - 1], paneId, false);
             } else {
                 currentFiles[paneId] = null;
                 editors[paneId].setValue('');
-                if(paneId === 2){
+                if (paneId === 2) {
                     editorPanes[2].style.display = 'none';
-                } 
+                    resizer.style.display = 'none';
+                    editorPanes[1].style.width = '100%';
+                }
             }
         }
 
-        if(!openFiles[1].length && !openFiles[2].length){
+        if (!openFiles[1].length && !openFiles[2].length) {
             updateEditorView();
         }
         saveFiles();
@@ -213,13 +219,13 @@ Object.values(editors).forEach(editor => {
 
     function getFileIcon(filename) {
         const extension = filename.split('.').pop().toLowerCase();
-        if(supportedExtensions.includes(extension)){
+        if (supportedExtensions.includes(extension)) {
             return `icons/${extension}.svg`;
         }
         return 'icons/text.svg';
     }
 
-    function renderFileItemContent(fileItem, filename){
+    function renderFileItemContent(fileItem, filename) {
         fileItem.innerHTML = '';
         const icon = document.createElement('img');
         icon.src = getFileIcon(filename);
@@ -234,7 +240,6 @@ Object.values(editors).forEach(editor => {
     function createFileItem(filename) {
         const fileItem = document.createElement('div');
         fileItem.className = 'file-item';
-        fileItem.textContent = filename;
         fileItem.dataset.filename = filename;
         renderFileItemContent(fileItem, filename);
         fileList.appendChild(fileItem);
@@ -298,17 +303,17 @@ Object.values(editors).forEach(editor => {
             if (oldFilename) {
                 files[newFilename] = files[oldFilename];
                 delete files[oldFilename];
-                
+
                 [1, 2].forEach(paneId => {
-                    if(openFiles[paneId].includes(oldFilename)){
+                    if (openFiles[paneId].includes(oldFilename)) {
                         openFiles[paneId] = openFiles[paneId].map(f => f === oldFilename ? newFilename : f);
                         const tab = tabsContainers[paneId].querySelector(`.tab-item[data-filename="${oldFilename}"]`);
-                        if(tab){
+                        if (tab) {
                             tab.dataset.filename = newFilename;
                             tab.querySelector('span').textContent = newFilename;
                         }
                     }
-                    if(currentFiles[paneId] === oldFilename) currentFiles[paneId] = newFilename;
+                    if (currentFiles[paneId] === oldFilename) currentFiles[paneId] = newFilename;
                 });
 
             } else {
@@ -323,8 +328,7 @@ Object.values(editors).forEach(editor => {
             if (!oldFilename) {
                 switchToFile(newFilename, activePane);
             } else {
-
-                 [1, 2].forEach(paneId => {
+                [1, 2].forEach(paneId => {
                     if (currentFiles[paneId] === newFilename) {
                         const fileItemInList = document.querySelector(`.file-item[data-filename="${newFilename}"]`);
                         if (fileItemInList) fileItemInList.classList.add('active');
@@ -353,7 +357,7 @@ Object.values(editors).forEach(editor => {
                 cancelEdit();
             }
         };
-        
+
         const resetInputListeners = () => {
             input.addEventListener('blur', finishEdit);
             input.addEventListener('keydown', handleKey);
@@ -362,8 +366,58 @@ Object.values(editors).forEach(editor => {
         resetInputListeners();
     }
 
+    function initResizer(){
+        let isResizing = false;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        document.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', stopResize);
+        });
+
+        function handleMouseMove(e){
+            if(!isResizing) return;
+
+            const container = editorSection.querySelector('.editor-group');
+            const containerRect = container.getBoundingClientRect();
+            const pane1MinWidth = 150;
+            const pane2MinWidth = 150;
+
+            let pane1Width = e.clientX - containerRect.left;
+            let pane2Width = containerRect.right - e.clientX;
+
+            if(pane1Width < pane1MinWidth){
+                pane1Width = pane1MinWidth;
+                pane2Width = containerRect.width - pane1Width - resizer.offsetWidth;
+            }
+
+            if(pane2Width < pane2MinWidth){
+                pane2Width = pane2MinWidth;
+                panel1Width = containerRect.width - pane2Width - resizer.offsetWidth;
+            }
+            editorPanes[1].style.width = `${pane1Width}px`;
+            editorPanes[2].style.width = `${pane2Width}px`;
+
+            editors[1].refresh();
+            editors[2].refresh();
+        }
+
+        function stopResize(){
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEvenetListener('mouseup', stopResize);
+        }
+    }
+
     editors[1].on('change', () => saveCurrentFile(1));
-    editors[2].on('change', () => saveCurrentFile(2))
+    editors[2].on('change', () => saveCurrentFile(2));
 
     newFileBtn.addEventListener('click', () => {
         const tempFileItem = document.createElement('div');
@@ -379,22 +433,28 @@ Object.values(editors).forEach(editor => {
             switchToFile(fileItem.dataset.filename, activePane);
         }
     });
-    [1,2]
-    tabsContainer.addEventListener('click', (e) => {
-        const target = e.target;
 
-        if(target.classList.contains('tab-close-btn')) {
+    [1, 2].forEach(paneId => {
+        tabsContainers[paneId].addEventListener('click', (e) => {
+            const target = e.target;
+            activePane = paneId;
 
-            e.stopPropagation();
-            const filename = target.parentElement.dataset.filename;
-            closeTab(filename);
-        } else {
-            const tabItem = target.closest('.tab-item');
-            if(tabItem) {
-                switchToFile(tabItem.dataset.filename);
+            if (target.classList.contains('tab-close-btn')) {
+                e.stopPropagation();
+                const filename = target.parentElement.dataset.filename;
+                closeTab(filename, paneId);
+            } else {
+                const tabItem = target.closest('.tab-item');
+                if (tabItem) {
+                    switchToFile(tabItem.dataset.filename, paneId);
+                }
             }
-        }
-    })
+        });
+
+        editors[paneId].on('focus', () => {
+            activePane = paneId;
+        });
+    });
 
     fileList.addEventListener('contextmenu', (e) => {
         const fileItem = e.target.closest('.file-item');
@@ -421,16 +481,33 @@ Object.values(editors).forEach(editor => {
         });
     }
 
+    if (splitViewBtn) {
+        splitViewBtn.addEventListener('click', () => {
+            if (contextFile) {
+                editorPanes[2].style.display = 'flex';
+                resizer.style.display = 'block';
+                editorPanes[1].style.width = '50%';
+                editorPanes[2].style.width = '50%';
+                switchToFile(contextFile, 2);
+                Object.values(editors).forEach(e => e.refresh());
+            }
+            hideContextMenu();
+        });
+    }
+
     if (deleteFileBtn) {
         deleteFileBtn.addEventListener('click', () => {
             if (contextFile && confirm(`Are you sure you want to delete "${contextFile}"?`)) {
                 const fileItem = Array.from(fileList.children).find(item => item.dataset.filename === contextFile);
-                if(fileItem) {
+                if (fileItem) {
                     fileItem.remove();
                 }
-                if(openFiles.includes(contextFile)){
-                    closeTab(contextFile);
-                }
+                [1, 2].forEach(paneId => {
+                    if (openFiles[paneId].includes(contextFile)) {
+                        closeTab(contextFile, paneId);
+                    }
+                });
+
                 delete files[contextFile];
 
                 updateEmptyMessage();
@@ -447,6 +524,4 @@ Object.values(editors).forEach(editor => {
     });
 
     loadFiles();
-    updateEmptyMessage();
-    updateEditorView();
 });
