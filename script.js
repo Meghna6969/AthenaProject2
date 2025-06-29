@@ -37,8 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const terminalContainer = document.getElementById('terminal-container');
     const terminalResizer = document.getElementById('terminal-resizer');
 
-
-
     const tabsContainers = {
         1: document.getElementById('tabsContainer1'),
         2: document.getElementById('tabsContainer2')
@@ -60,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const supportedExtensions = ['txt', 'html', 'css', 'js', 'py'];
 
     async function initPyodide(){
-        term = new terminalContainer({convertEol: true, theme: {background: '#1e1e1e'}});
+        term = new Terminal({convertEol: true, theme: {background: '#1e1e1e'}});
         term.open(terminalContainer);
         term.writeln('Initializing Pyodide...');
         pyodide = await loadPyodide();
@@ -88,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return 'text/plain';
         }
     }
+    
     function updateTerminalVisibility(){
         const currentFile = currentFiles[activePane];
         const isPythonFile = currentFile && currentFile.endsWith('.py');
@@ -111,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         else {
             editorPlaceholder.style.display = 'flex';
-            document.querySelector('.editor.group').style.display = 'none';
+            document.querySelector('.editor-group').style.display = 'none';
         }
         updatePaneLayout();
         updateTerminalVisibility();
@@ -298,17 +297,67 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         Object.values(editors).forEach(e => e.refresh());
     }
+
     function initTerminalResizer(){
         let isResizing = false;
-        const editorWrapper = document.querySelector('.editor-section-wrapper');
 
         terminalResizer.addEventListener('mousedown', (e) => {
             isResizing = true;
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', stopResize);
+        });
+
+        function handleMouseMove(e){
+            if(!isResizing) return;
+            const mainContent = document.querySelector('.main-content');
+            const newTerminalHeight = mainContent.getBoundingClientRect().bottom - e.clientY;
+            if(newTerminalHeight > 50 &&  newTerminalHeight < mainContent.offsetHeight - 100){
+                terminalContainer.style.height = `${newTerminalHeight}px`;
+                Object.values(editors).forEach(ed => ed.refresh());
+            }
+        }
+
+        function stopResize(){
+            isResizing = false;
             document.body.style.cursor = 'default';
             document.body.style.userSelect = 'auto';
-            document.removeEvenetListener('mousemove', handleMouseMove);
-            document.removeEvenetlIstener('mouseup', stopResize);
-        })
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', stopResize);
+        }
+    }
+
+    async function runPythonCode(){
+        if(!pyodide || !currentFiles[activePane]) return;
+        const code = editors[activePane].getValue();
+        if(!code.trim()) return;
+
+        term.writeln(`\n\u001b[1;32m>>> Running ${currentFiles[activePane]}...\u001b[0m`);
+
+        try {
+            pyodide.globals.set('print_buffer', []);
+            pyodide.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()`
+            );
+
+            let result = await pyodide.runPythonAsync(code);
+
+            const stdout = pyodide.runPython('sys.stdout.getvalue()');
+            const stderr = pyodide.runPython('sys.stderr.getvalue()');
+
+            if(stdout) term.write(stdout.replace(/\n/g, '\r\n'));
+            if (stderr) term.write(`\u001b[1;31m${stderr.replace(/\n/g, '\r\n')}\u001b[0m`);
+
+            if(result !== undefined){
+                term.writeln(`\u001b[1;34m\r\n<-- ${result}\u001b[0m`);
+            }
+        } catch(err) {
+             term.writeln(`\u001b[1;31m${err.toString().replace(/\n/g, '\r\n')}\u001b[0m`);
+        }
     }
 
     function startFileEdit(fileItem, oldFilename) {
@@ -569,12 +618,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    runBtn.addEventListener('click', runPythonCode);
+
     document.addEventListener('click', (e) => {
         if (contextMenu && !contextMenu.contains(e.target)) {
             hideContextMenu();
         }
     });
-
     initResizer();
+    initTerminalResizer();
     loadFiles();
+    initPyodide();
 });
