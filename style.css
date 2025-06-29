@@ -374,7 +374,7 @@ li.CodeMirror-hint-active {
     padding: 10px;
     display: flex;
     flex-direction: column;
-    overflow: hiddent;
+    overflow: hidden;
 }
 #terminal-container .xterm {
     height: 100% !important;

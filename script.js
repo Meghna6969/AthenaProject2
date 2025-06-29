@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const runBtn = document.getElementById('runBtn');
     const terminalContainer = document.getElementById('terminal-container');
     const terminalResizer = document.getElementById('terminal-resizer');
-
+    const previewResizer = document.getElementById('preview-resizer');
+    
     const tabsContainers = {
         1: document.getElementById('tabsContainer1'),
         2: document.getElementById('tabsContainer2')
@@ -89,11 +90,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateTerminalVisibility(){
         const currentFile = currentFiles[activePane];
-        const isPythonFile = currentFile && currentFile.endsWith('.py');
+        const  isPythonFile = currentFile && currentFile.endsWith('.py');
+        const isHtmlFile = currentFile && currentFile.endsWith('.html');
 
         runBtn.style.display = isPythonFile ? 'block': 'none';
+        previewBtn.style.display = isHtmlFile ? 'block' : 'none';
+        
         terminalContainer.style.display = isPythonFile ? 'flex' : 'none';
         terminalResizer.style.display = isPythonFile ? 'block' : 'none';
+        
+        previewContainer.style.display = isHtmlFile ? 'flex' : 'none';
+        previewResizer.style.display = isHtmlFile ? 'block' : 'none';
     }
     
 
@@ -357,6 +364,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch(err) {
              term.writeln(`\u001b[1;31m${err.toString().replace(/\n/g, '\r\n')}\u001b[0m`);
+        }
+    }
+    function initPreviewResizer(){
+        let isResizing = false;
+
+        previewResizer.addEventListener('mousedown', (e) => {
+            isResizing  = true;
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseUp', stopResize);
+        })
+         function handleMouseMove(e) {
+                if(!isResizing) return;
+                const mainContent = document.querySelector('.main-content');
+                const newPreviewHeight = mainContent.getBoundingClientRect().bottom - e.clientY;
+                if(newPreviewHeight > 50 && newPreviewHeight < mainContent.offsetHeight - 100){
+                    previewContainer.style.height = `${newPreviewHeight}px`;
+                    Object.values(editors).forEach(ed => ed.refresh());
+                }
+            }
+        function stopResize(){
+            isResizing = false;
+            document.body.style.cursor = 'default';
         }
     }
 
@@ -629,4 +660,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initTerminalResizer();
     loadFiles();
     initPyodide();
+    
 });
