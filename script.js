@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const splitViewBtn = document.getElementById('splitViewBtn');
     const editorSection = document.querySelector('.editor-section');
     const editorPlaceholder = document.getElementById('editor-placeholder');
+    const runBtn = document.getElementById('runBtn');
+    const terminalContainer = document.getElementById('terminal-container');
+    const terminalResizer = document.getElementById('terminal-resizer');
+
+
+
     const tabsContainers = {
         1: document.getElementById('tabsContainer1'),
         2: document.getElementById('tabsContainer2')
@@ -48,8 +54,19 @@ document.addEventListener('DOMContentLoaded', function() {
     let openFiles = { 1: [], 2: [] };
     let currentFiles = { 1: null, 2: null };
     let activePane = 1;
+    let pyodide = null;
+    let term = null;
 
-    const supportedExtensions = ['txt', 'html', 'css', 'js'];
+    const supportedExtensions = ['txt', 'html', 'css', 'js', 'py'];
+
+    async function initPyodide(){
+        term = new terminalContainer({convertEol: true, theme: {background: '#1e1e1e'}});
+        term.open(terminalContainer);
+        term.writeln('Initializing Pyodide...');
+        pyodide = await loadPyodide();
+        term.writeln('Pyodide and Python environment is ready!');
+    }
+
 
     function isValidFileExtension(filename) {
         const extension = filename.split('.').pop().toLowerCase();
@@ -65,10 +82,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 return 'css';
             case 'js':
                 return 'javascript';
+            case 'py':
+                return 'python';
             default:
                 return 'text/plain';
         }
     }
+    function updateTerminalVisibility(){
+        const currentFile = currentFiles[activePane];
+        const isPythonFile = currentFile && currentFile.endsWith('.py');
+
+        runBtn.style.display = isPythonFile ? 'block': 'none';
+        terminalContainer.style.display = isPythonFile ? 'flex' : 'none';
+        terminalResizer.style.display = isPythonFile ? 'block' : 'none';
+    }
+    
 
     function updateEmptyMessage() {
         const fileItems = document.querySelectorAll('.file-item:not(.editing)');
@@ -77,14 +105,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateEditorView() {
         const hasOpenFile = Object.values(openFiles).some(arr => arr && arr.length > 0);
-        if (hasOpenFile) {
+        if(hasOpenFile) {
             editorPlaceholder.style.display = 'none';
-            editorSection.style.display = 'flex';
-        } else {
+            document.querySelector('.editor-group').style.display = 'flex';
+        }
+        else {
             editorPlaceholder.style.display = 'flex';
-            editorSection.style.display = 'none';
+            document.querySelector('.editor.group').style.display = 'none';
         }
         updatePaneLayout();
+        updateTerminalVisibility();
     }
 
     function saveFiles() {
@@ -267,6 +297,18 @@ document.addEventListener('DOMContentLoaded', function() {
             editorPanes[1].style.width = '100%';
         }
         Object.values(editors).forEach(e => e.refresh());
+    }
+    function initTerminalResizer(){
+        let isResizing = false;
+        const editorWrapper = document.querySelector('.editor-section-wrapper');
+
+        terminalResizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+            document.removeEvenetListener('mousemove', handleMouseMove);
+            document.removeEvenetlIstener('mouseup', stopResize);
+        })
     }
 
     function startFileEdit(fileItem, oldFilename) {

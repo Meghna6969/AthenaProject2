@@ -15,6 +15,41 @@ body {
     color: #ffffff;
 }
 
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.editor-section-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100px;
+    overflow: hidden;
+}
+
+.editor-header {
+    display:flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 5px 15 px;
+    background-color: #252526;
+    border-top: 1px solid #333;
+}
+#runBtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+#runBtn:hover {
+    background-color: #45a049;
+}
 .main-container {
     display: flex;
     height: 100vh;
@@ -87,7 +122,6 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    height: 100vh;
 }
 
 h1 {
@@ -104,10 +138,12 @@ h1 {
     flex: 1;
     position: relative;
     display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 .CodeMirror {
     flex: 1;
-    height: 100%;
+    height: auto;
     font-family: 'Courier New', Courier, monospace;
     font-size: 14px;
 }
@@ -327,3 +363,19 @@ li.CodeMirror-hint-active {
     background-color: purple;
 }
 
+.terminal-resizer {
+    height: 5px;
+    background-color: #333;
+    cursor: row-resize;
+}
+#terminal-container {
+    height: 250px;
+    background-color: #1e1e1e;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hiddent;
+}
+#terminal-container .xterm {
+    height: 100% !important;
+}
