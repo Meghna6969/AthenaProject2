@@ -211,7 +211,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         updateEditorView();
+
+        if(filename.endsWith('.html')){
+            setTimeout(previewHtmlCode, 100);
+        }
         saveFiles();
+    }
+
+    function Search(filename, search_word){
+        const searchBar = document.getElementById("search_bar");
+        const resultText = document.getElementById("result_text");
+        resultText.text = "No results";
+        resultText.style.foregroundColor = "red";
+    }
+    function searchIndexes(filename, search_word){
+
     }
 
     function createTab(filename, paneId) {
@@ -420,10 +434,35 @@ function previewHtmlCode(){
             }
         });
     }
+    const jsScriptRegex = /<script[^>]*src=["']([^"']*\.js)["'][^>]*><\/script>/gi;
+    const jsMatches = modifiedCode.match(jsScriptRegex);
+    if(jsMatches){
+        jsMatches.forEach(scriptTag => {
+            const srcMatch = scriptTag.match(/src=["']([^"']*\.js)["']/i);
+            if(srcMatch){
+                const jsFileName = srcMatch[1];
+                if(files[jsFileName]){
+                    const jsContent = files[jsFileName];
+                    const inlineScriptTag = `<script>\n${jsContent}\n</script>`;
+                    modifiedCode = modifiedCode.replace(scriptTag, inlineScriptTag);
+                }
+            }
+            
+        });
+    }
 
     const previewFrame = document.getElementById('preview-frame');
     previewFrame.srcdoc = modifiedCode;
 }
+    let previewTimeout;
+    function debouncedPreview(){
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(() => {
+            if(currentFiles[activePane] && currentFiles[activePane].endsWith('.html')){
+                previewHtmlCode();
+            }
+        }, 300);
+    }
     
     function startFileEdit(fileItem, oldFilename) {
         fileItem.classList.add('editing');
@@ -587,8 +626,14 @@ function previewHtmlCode(){
         }
     }
 
-    editors[1].on('change', () => saveCurrentFile(1));
-    editors[2].on('change', () => saveCurrentFile(2));
+    editors[1].on('change', () => {
+        saveCurrentFile(1)
+        if (activePane === 1) debouncedPreview();
+    });
+    editors[2].on('change', () => {
+        saveCurrentFile(2)
+        if(activePane === 2) debouncedPreview();
+    });
 
     newFileBtn.addEventListener('click', () => {
         const tempFileItem = document.createElement('div');
