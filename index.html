@@ -8,17 +8,7 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.1.0/css/xterm.min.css" />
     </head>
     <body>
-        <div class="main-container">
-            <div class="left-panel">
-                <div class="panel-header">
-                    <h3>Files</h3>
-                    <button id="newFileBtn" class="new-file-btn">+</button>
-                </div>
-                <div class="file-list">
-                    <div class="empty-message">Click the + button to add documents</div>
-                </div>
-            </div>
-            <div class="main-content">
+        <div class="main-content">
                 <div class="editor-section-wrapper">
                     <div class="editor-section">
                         <div id="editor-placeholder" class="editor-placeholder">
@@ -42,10 +32,18 @@
                     </div>
                     <div class="editor-header">
                         <button id="runBtn" style="display: none;">▶ Run Python</button>
+                        <button id="previewBtn" style="display: none;">👁 Preview HTML</button>
                     </div>
                 </div>
-                <div id="terminal-resizer" class="terminal-resizer" style="display: none;"></div>
+             `   <div id="terminal-resizer" class="terminal-resizer" style="display: none;"></div>
                 <div id="terminal-container" style="display: none;"></div>
+                <div id="preview-resizer" class="preview-resizer" style="display: none;"></div>
+                <div id="preview-container" style="display: none;">
+                    <div class="preview-header">
+                        <h4>HTML Preview</h4>
+                    </div>
+                    <iframe id="preview-frame" class="preview-frame"></iframe>
+                </div>
             </div>
         </div>
         <div id="contextMenu" class="context-menu">
@@ -76,4 +74,5 @@
         <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
         <script src="script.js"></script>
     </body>
+    
 </html>

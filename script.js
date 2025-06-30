@@ -388,8 +388,26 @@ document.addEventListener('DOMContentLoaded', function() {
         function stopResize(){
             isResizing = false;
             document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', stopResize);
         }
     }
+    function previewHtmlCode(){
+        if(!currentFiles[activePane] || !currentFiles[activePane].endsWith('.html')) return;
+        const code = editors[activePane].getValue();
+        if(!code.trim()) return;
+
+        const  previewFrame = document.getElementById('preview-frame');
+        const blob = new Blob([code], {type: '/text/html'});
+        const url = URL.createObjectURL(blob);
+        previewFrame.src = url;
+
+        previewFrame.onload = () => {
+            URL.revokeObjectURL(url);
+        };
+    }
+
 
     function startFileEdit(fileItem, oldFilename) {
         fileItem.classList.add('editing');
@@ -650,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     runBtn.addEventListener('click', runPythonCode);
+    previewBtn.addEventListener('click', previewHtmlCode);
 
     document.addEventListener('click', (e) => {
         if (contextMenu && !contextMenu.contains(e.target)) {
@@ -659,6 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initResizer();
     initTerminalResizer();
     loadFiles();
+    initPreviewResizer();
     initPyodide();
     
 });

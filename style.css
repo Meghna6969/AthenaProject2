@@ -379,3 +379,25 @@ li.CodeMirror-hint-active {
 #terminal-container .xterm {
     height: 100% !important;
 }
+
+#previewBtn {
+    background-color: #007acc;
+    color: white;
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+#previewBtn:hover {
+    background-color: #005a9e;
+}
+
+.preview-resizer {
+    height: 5px;
+    background-color: #333;
+    cursor: row-resize;
+}
+.preview-
