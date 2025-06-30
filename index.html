@@ -1,14 +1,25 @@
 <html>
     <head>
         <title>Code Editor</title>
-         <link rel="stylesheet" href="style.css">
+         <link rel="stylesheet" href="Rstyle.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.1.0/css/xterm.min.css" />
     </head>
     <body>
-        <div class="main-content">
+        <div class="main-container">
+            <div class="left-panel">
+                <div class="panel-header">
+                    <h3>Files</h3>
+                    <button id="newFileBtn" class="new-file-btn">+</button>
+                </div>
+                <div class="file-list"></div>
+                <div class="empty-message">No files yet. Click + to create a new file.</div>
+            </div>
+            
+            <div class="main-content">
+                <h1>Code Editor</h1>
                 <div class="editor-section-wrapper">
                     <div class="editor-section">
                         <div id="editor-placeholder" class="editor-placeholder">
@@ -35,7 +46,7 @@
                         <button id="previewBtn" style="display: none;">👁 Preview HTML</button>
                     </div>
                 </div>
-             `   <div id="terminal-resizer" class="terminal-resizer" style="display: none;"></div>
+                <div id="terminal-resizer" class="terminal-resizer" style="display: none;"></div>
                 <div id="terminal-container" style="display: none;"></div>
                 <div id="preview-resizer" class="preview-resizer" style="display: none;"></div>
                 <div id="preview-container" style="display: none;">
@@ -46,10 +57,11 @@
                 </div>
             </div>
         </div>
+        
         <div id="contextMenu" class="context-menu">
             <div id="renameFileBtn" class="context-menu-item">Rename</div>
              <div id="splitViewBtn" class="context-menu-item">Open in Split View</div>
-            <div id="deleteFileBtn" class="context-menu-item">Delete</div>
+            <div id="deleteFileBtn" class="context-menu-item delete">Delete</div>
         </div>
         
         <!-- CodeMirror JS -->
@@ -74,5 +86,4 @@
         <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
         <script src="script.js"></script>
     </body>
-    
 </html>

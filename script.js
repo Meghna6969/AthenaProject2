@@ -36,6 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const runBtn = document.getElementById('runBtn');
     const terminalContainer = document.getElementById('terminal-container');
     const terminalResizer = document.getElementById('terminal-resizer');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewContainer = document.getElementById('preview-container');
     const previewResizer = document.getElementById('preview-resizer');
     
     const tabsContainers = {
@@ -374,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.cursor = 'row-resize';
             document.body.style.userSelect = 'none';
             document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseUp', stopResize);
+            document.addEventListener('mouseup', stopResize);
         })
          function handleMouseMove(e) {
                 if(!isResizing) return;
@@ -393,22 +395,36 @@ document.addEventListener('DOMContentLoaded', function() {
             document.removeEventListener('mouseup', stopResize);
         }
     }
-    function previewHtmlCode(){
-        if(!currentFiles[activePane] || !currentFiles[activePane].endsWith('.html')) return;
-        const code = editors[activePane].getValue();
-        if(!code.trim()) return;
+function previewHtmlCode(){
+    if(!currentFiles[activePane] || !currentFiles[activePane].endsWith('.html')) return;
+    let code = editors[activePane].getValue();
+    if(!code.trim()) return;
 
-        const  previewFrame = document.getElementById('preview-frame');
-        const blob = new Blob([code], {type: '/text/html'});
-        const url = URL.createObjectURL(blob);
-        previewFrame.src = url;
-
-        previewFrame.onload = () => {
-            URL.revokeObjectURL(url);
-        };
+    // Find and replace CSS file references with inline styles
+    const cssLinkRegex = /<link[^>]*href=["']([^"']*\.css)["'][^>]*>/gi;
+    let modifiedCode = code;
+    
+    const cssMatches = code.match(cssLinkRegex);
+    if (cssMatches) {
+        cssMatches.forEach(linkTag => {
+            const hrefMatch = linkTag.match(/href=["']([^"']*\.css)["']/i);
+            if (hrefMatch) {
+                const cssFileName = hrefMatch[1];
+                // Check if we have this CSS file in our project
+                if (files[cssFileName]) {
+                    const cssContent = files[cssFileName];
+                    const styleTag = `<style>\n${cssContent}\n</style>`;
+                    // Replace the link tag with inline style
+                    modifiedCode = modifiedCode.replace(linkTag, styleTag);
+                }
+            }
+        });
     }
 
-
+    const previewFrame = document.getElementById('preview-frame');
+    previewFrame.srcdoc = modifiedCode;
+}
+    
     function startFileEdit(fileItem, oldFilename) {
         fileItem.classList.add('editing');
         fileItem.innerHTML = '';
